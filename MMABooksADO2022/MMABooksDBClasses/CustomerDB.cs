@@ -109,6 +109,8 @@ namespace MMABooksDBClasses
             MySqlCommand deleteCommand =
                 new MySqlCommand(deleteStatement, connection);
             deleteCommand.Parameters.AddWithValue(
+                "@CustomerID", customer.CustomerID);
+            deleteCommand.Parameters.AddWithValue(
                 "@Name", customer.Name);
             deleteCommand.Parameters.AddWithValue(
                 "@Address", customer.Address);

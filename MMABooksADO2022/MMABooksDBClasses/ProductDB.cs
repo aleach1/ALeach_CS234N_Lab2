@@ -29,14 +29,17 @@ namespace MMABooksDBClasses
             try
             {
                 connection.Open();
-                insertCommand.ExecuteNonQuery();
-                // MySQL specific code for getting last pk value
-                string selectStatement =
-                    "SELECT LAST_INSERT_ID()";
-                MySqlCommand selectCommand =
-                    new MySqlCommand(selectStatement, connection);
-                int customerID = Convert.ToInt32(selectCommand.ExecuteScalar());
-                return customerID;
+                int insertResult = insertCommand.ExecuteNonQuery();
+
+                if(insertResult == 1)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+                
             }
             catch (MySqlException ex)
             {
@@ -50,12 +53,83 @@ namespace MMABooksDBClasses
 
         public static bool DeleteProduct(Product product)
         {
-            you
+            MySqlConnection connection = MMABooksDB.GetConnection();
+            string deleteStatement =
+                "DELETE FROM products " +
+                "WHERE ProductCode = @ProductCode " +
+                "AND Description = @Description " +
+                "AND OnHandQuantity = @OnHandQuantity " +
+                "AND UnitPrice = @UnitPrice ";
+            MySqlCommand deleteCommand =
+                new MySqlCommand(deleteStatement, connection);
+            deleteCommand.Parameters.AddWithValue(
+                "@ProductCode", product.ProductCode);
+            deleteCommand.Parameters.AddWithValue(
+                "@Description", product.Description);
+            deleteCommand.Parameters.AddWithValue(
+                "@OnHandQuantity", product.OnHandQuantity);
+            deleteCommand.Parameters.AddWithValue(
+                "@UnitPrice", product.UnitPrice);
+
+            try
+            {
+                // open the connection
+                connection.Open();
+                // execute the command
+                int deleteResult = deleteCommand.ExecuteNonQuery();
+                // if the number of records returned = 1, return true otherwise return false
+                if (deleteResult == 1)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                connection.Close();
+            }
         }
 
         public static List<Product> GetList()
         {
-            you
+            List<Product> products = new List<Product>();
+            MySqlConnection connection = MMABooksDB.GetConnection();
+            string selectStatement = "SELECT ProductCode, Description, UnitPrice, OnHandQuantity "
+                                   + "FROM products "
+                                   + "ORDER BY UnitPrice";
+            MySqlCommand selectCommand =
+                new MySqlCommand(selectStatement, connection);
+            try
+            {
+                connection.Open();
+                MySqlDataReader reader = selectCommand.ExecuteReader();
+                while (reader.Read())
+                {
+                    Product p = new Product();
+                    p.ProductCode = reader["ProductCode"].ToString();
+                    p.Description = reader["Description"].ToString();
+                    p.UnitPrice = (decimal)reader["UnitPrice"];
+                    p.OnHandQuantity = (int)reader["OnHandQuantity"];
+                    products.Add(p);
+                }
+                reader.Close();
+            }
+            catch (MySqlException ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                connection.Close();
+            }
+            return products;
         }
 
         public static Product GetProduct(string productCode)
@@ -100,7 +174,60 @@ namespace MMABooksDBClasses
 
         public static bool UpdateProduct(Product oldProduct, Product newProduct)
         {
-            you
+            MySqlConnection connection = MMABooksDB.GetConnection();
+            // create a connection
+            string updateStatement =
+                "UPDATE products SET " +
+                "Description = @NewDescription, " +
+                "UnitPrice = @NewUnitPrice, " +
+                "OnHandQuantity = @NewOnHandQuantity " +
+                "WHERE ProductCode = @OldProductCode " +
+                "Description = @OldDescription, " +
+                "UnitPrice = @OldUnitPrice, " +
+                "OnHandQuantity = @OldOnHandQuantity ";
+            // setup the command object
+            MySqlCommand updateCommand =
+                new MySqlCommand(updateStatement, connection);
+            updateCommand.Parameters.AddWithValue(
+                "@NewDescription", newProduct.Description);
+            updateCommand.Parameters.AddWithValue(
+                "@NewUnitPrice", newProduct.UnitPrice);
+            updateCommand.Parameters.AddWithValue(
+                "@NewOnHandQuantity", newProduct.OnHandQuantity);
+            updateCommand.Parameters.AddWithValue(
+                "@OldProductCode", oldProduct.ProductCode);
+            updateCommand.Parameters.AddWithValue(
+                "@OldDescription", oldProduct.Description);
+            updateCommand.Parameters.AddWithValue(
+                "@OldUnitPrice", oldProduct.UnitPrice);
+            updateCommand.Parameters.AddWithValue(
+                "@OldOnHandQuantity", oldProduct.OnHandQuantity);
+            try
+            {
+                // open the connection
+                connection.Open();
+                // execute the command
+                int updateResult = updateCommand.ExecuteNonQuery();
+                // if the number of records returned = 1, return true otherwise return false
+                if (updateResult == 1)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (MySqlException ex)
+            {
+                throw ex;
+            }
+            finally
+            {
+                connection.Close();
+            }
+
+            return false;
         }
     }
 }
